@@ -1,63 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-async function assertAdmin(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-  if (!data) throw new Error("Forbidden: admin only");
-}
-
-// Bootstrap: create the very first admin (only when zero admins exist)
-export const bootstrapAdmin = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
-    z.object({ email: z.string().email(), password: z.string().min(8).max(128) }).parse(d),
-  )
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { count } = await supabaseAdmin.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
-    if ((count ?? 0) > 0) throw new Error("An admin account already exists. Please sign in.");
-    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
-      password: data.password,
-      email_confirm: true,
-    });
-    if (error || !created.user) throw new Error(error?.message || "Failed to create admin");
-    const { error: re } = await supabaseAdmin.from("user_roles").insert({ user_id: created.user.id, role: "admin" });
-    if (re) throw new Error(re.message);
-    return { ok: true };
-  });
+// NOTE: Admin endpoints are intentionally open (no auth) per teacher's request.
+// The developer/admin interface is unauthenticated.
 
 export const hasAdminAccount = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { count } = await supabaseAdmin.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
-  return { exists: (count ?? 0) > 0 };
+  return { exists: true };
 });
 
-export const checkAdmin = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
-    return { isAdmin: !!data };
-  });
+export const checkAdmin = createServerFn({ method: "GET" }).handler(async () => {
+  return { isAdmin: true };
+});
 
-// Admin: list all levels (including unpublished)
-export const adminListLevels = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.from("levels").select("*").order("number");
-    if (error) throw new Error(error.message);
-    return data ?? [];
-  });
+export const adminListLevels = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.from("levels").select("*").order("number");
+  if (error) throw new Error(error.message);
+  return data ?? [];
+});
 
 export const adminGetLevel = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: level }, { data: questions }] = await Promise.all([
       supabaseAdmin.from("levels").select("*").eq("id", data.id).maybeSingle(),
@@ -67,7 +31,6 @@ export const adminGetLevel = createServerFn({ method: "GET" })
   });
 
 export const adminSaveLevel = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z.object({
       id: z.string().uuid().optional(),
@@ -79,8 +42,7 @@ export const adminSaveLevel = createServerFn({ method: "POST" })
       is_published: z.boolean(),
     }).parse(d),
   )
-  .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.id) {
       const { error } = await supabaseAdmin.from("levels").update({
@@ -101,10 +63,8 @@ export const adminSaveLevel = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteLevel = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("levels").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -112,7 +72,6 @@ export const adminDeleteLevel = createServerFn({ method: "POST" })
   });
 
 export const adminSaveQuestion = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z.object({
       id: z.string().uuid().optional(),
@@ -127,8 +86,7 @@ export const adminSaveQuestion = createServerFn({ method: "POST" })
       difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
     }).parse(d),
   )
-  .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.id) {
       const { error } = await supabaseAdmin.from("questions").update({
@@ -149,10 +107,8 @@ export const adminSaveQuestion = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteQuestion = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("questions").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -161,7 +117,6 @@ export const adminDeleteQuestion = createServerFn({ method: "POST" })
 
 // AI: generate a set of quiz questions for a topic
 export const aiGenerateQuestions = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z.object({
       topic: z.string().min(2).max(200),
@@ -169,8 +124,7 @@ export const aiGenerateQuestions = createServerFn({ method: "POST" })
       difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
     }).parse(d),
   )
-  .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+  .handler(async ({ data }) => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");

@@ -1,22 +1,20 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import {
   adminListLevels, adminSaveLevel, adminDeleteLevel,
   adminGetLevel, adminSaveQuestion, adminDeleteQuestion,
   aiGenerateQuestions,
 } from "@/lib/admin.functions";
 import { motion } from "framer-motion";
-import { LogOut, Plus, Eye, EyeOff, Trash2, Sparkles, Pencil, ChevronLeft, Loader2, X } from "lucide-react";
+import { Plus, Eye, EyeOff, Trash2, Sparkles, Pencil, ChevronLeft, Loader2, X } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
 function Dashboard() {
-  const qc = useQueryClient();
-  const navigate = useNavigate();
   const [editingLevel, setEditingLevel] = useState<string | null>(null);
 
   const { data: levels, refetch } = useQuery({
@@ -24,11 +22,6 @@ function Dashboard() {
     queryFn: () => adminListLevels(),
   });
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    qc.clear();
-    navigate({ to: "/" });
-  };
 
   const createLevel = async () => {
     const nextNum = (levels?.reduce((m, l) => Math.max(m, l.number), 0) ?? 0) + 1;
@@ -72,10 +65,8 @@ function Dashboard() {
           </div>
           <div className="flex gap-2">
             <Link to="/" className="rounded-full border px-4 py-2 text-sm hover:bg-accent transition">Preview site</Link>
-            <button onClick={signOut} className="rounded-full border px-4 py-2 text-sm inline-flex items-center gap-2 hover:bg-accent transition">
-              <LogOut className="h-4 w-4" /> Sign out
-            </button>
           </div>
+
         </div>
 
         <button onClick={createLevel} className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 transition">
