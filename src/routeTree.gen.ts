@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LevelsNumberRouteImport } from './routes/levels.$number'
 import { Route as LevelsNumberResultRouteImport } from './routes/levels.$number.result'
@@ -17,6 +18,11 @@ import { Route as LevelsNumberResultRouteImport } from './routes/levels.$number.
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,12 +43,14 @@ const LevelsNumberResultRoute = LevelsNumberResultRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/progress': typeof ProgressRoute
   '/levels/$number': typeof LevelsNumberRouteWithChildren
   '/levels/$number/result': typeof LevelsNumberResultRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/progress': typeof ProgressRoute
   '/levels/$number': typeof LevelsNumberRouteWithChildren
   '/levels/$number/result': typeof LevelsNumberResultRoute
@@ -50,18 +58,30 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/progress': typeof ProgressRoute
   '/levels/$number': typeof LevelsNumberRouteWithChildren
   '/levels/$number/result': typeof LevelsNumberResultRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/progress' | '/levels/$number' | '/levels/$number/result'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/progress'
+    | '/levels/$number'
+    | '/levels/$number/result'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/progress' | '/levels/$number' | '/levels/$number/result'
+  to:
+    | '/'
+    | '/admin'
+    | '/progress'
+    | '/levels/$number'
+    | '/levels/$number/result'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/progress'
     | '/levels/$number'
     | '/levels/$number/result'
@@ -69,6 +89,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   ProgressRoute: typeof ProgressRoute
   LevelsNumberRoute: typeof LevelsNumberRouteWithChildren
 }
@@ -80,6 +101,13 @@ declare module '@tanstack/react-router' {
       path: '/progress'
       fullPath: '/progress'
       preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -120,6 +148,7 @@ const LevelsNumberRouteWithChildren = LevelsNumberRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   ProgressRoute: ProgressRoute,
   LevelsNumberRoute: LevelsNumberRouteWithChildren,
 }
