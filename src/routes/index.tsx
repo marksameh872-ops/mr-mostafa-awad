@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, Moon, Sun, User } from "lucide-react";
+import { Moon, Sun, User } from "lucide-react";
+import mrEnglishLogo from "@/assets/mr-english-logo.jpg.asset.json";
 import { IntroAnimation } from "@/components/IntroAnimation";
 import { SocialButtons } from "@/components/SocialButtons";
 import { LevelCard, type Level } from "@/components/LevelCard";
@@ -91,9 +92,9 @@ function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto grid place-items-center h-24 w-24 rounded-3xl glass shadow-soft"
+            className="mx-auto h-28 w-28 rounded-full overflow-hidden shadow-soft ring-1 ring-black/5"
           >
-            <GraduationCap className="h-11 w-11 text-primary" strokeWidth={1.5} />
+            <img src={mrEnglishLogo.url} alt="Mr English – Mr. Mostafa Awad logo" className="h-full w-full object-cover" />
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
