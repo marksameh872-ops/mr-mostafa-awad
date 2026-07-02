@@ -41,7 +41,7 @@ function Dashboard() {
     refetch();
   };
 
-  const togglePublish = async (l: typeof levels extends Array<infer T> ? T : never) => {
+  const togglePublish = async (l: any) => {
     await adminSaveLevel({
       data: {
         id: l.id, number: l.number, title: l.title, description: l.description ?? "",
