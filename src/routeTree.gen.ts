@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LevelsNumberRouteImport } from './routes/levels.$number'
 import { Route as LevelsNumberResultRouteImport } from './routes/levels.$number.result'
 
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,35 +37,51 @@ const LevelsNumberResultRoute = LevelsNumberResultRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/progress': typeof ProgressRoute
   '/levels/$number': typeof LevelsNumberRouteWithChildren
   '/levels/$number/result': typeof LevelsNumberResultRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/progress': typeof ProgressRoute
   '/levels/$number': typeof LevelsNumberRouteWithChildren
   '/levels/$number/result': typeof LevelsNumberResultRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/progress': typeof ProgressRoute
   '/levels/$number': typeof LevelsNumberRouteWithChildren
   '/levels/$number/result': typeof LevelsNumberResultRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/levels/$number' | '/levels/$number/result'
+  fullPaths: '/' | '/progress' | '/levels/$number' | '/levels/$number/result'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/levels/$number' | '/levels/$number/result'
-  id: '__root__' | '/' | '/levels/$number' | '/levels/$number/result'
+  to: '/' | '/progress' | '/levels/$number' | '/levels/$number/result'
+  id:
+    | '__root__'
+    | '/'
+    | '/progress'
+    | '/levels/$number'
+    | '/levels/$number/result'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProgressRoute: typeof ProgressRoute
   LevelsNumberRoute: typeof LevelsNumberRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -98,6 +120,7 @@ const LevelsNumberRouteWithChildren = LevelsNumberRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProgressRoute: ProgressRoute,
   LevelsNumberRoute: LevelsNumberRouteWithChildren,
 }
 export const routeTree = rootRouteImport
